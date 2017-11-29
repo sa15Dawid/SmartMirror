@@ -5,6 +5,8 @@ import urllib.request
 from PyQt5.QtCore import * #QTime, QTimer, QDateTime
 from PyQt5.QtWidgets import * #QApplication, QLCDNumber, QWidget, QLabel
 from PyQt5.QtGui import *
+from WeatherWindow import __init__
+
 
 api_url = 'http://openweathermap.org/data/2.5/weather?'
 id = '2761369'
@@ -17,9 +19,10 @@ class MainWindow(QWidget):
         super(MainWindow, self).__init__()
 
         #Window
-        self.setWindowTitle("Hallo")
-        self.showFullScreen()
-
+        self.setWindowTitle("Main")
+        #self.showFullScreen()
+        self.show()
+        
         p = self.palette()
         p.setColor(self.backgroundRole(), Qt.black)
         self.setPalette(p)
@@ -64,6 +67,11 @@ class MainWindow(QWidget):
         
         self.quote_label.resize (100, 100)
         
+        #Button
+        self.WeatherWindowButton = QPushButton(self)
+        self.WeatherWindowButton.setObjectName("Change Window")
+        self.WeatherWindowButton.clicked.connect(self.changeWindow)
+        
 
         #LCD
 ##        self.lcd_anzeige = QLCDNumber(self)
@@ -90,9 +98,16 @@ class MainWindow(QWidget):
         v.addWidget(self.quote_label)
         #v.addWidget(self.quote_author_label)
         v.addStretch(1)
+        v.addWidget(self.WeatherWindowButton)
 
         self.setLayout(v)
 
+
+    def changeWindow(self):
+        self.window = QMainWindow()
+        self.ui = WeatherWindow()
+        self.ui.__init__(self.window)
+        self.window.show()
 
     #Zeit
     def getTime(self):
@@ -127,11 +142,10 @@ class MainWindow(QWidget):
         date = QDateTime.currentDateTime().toString("dddd " + "dd" + "." + "MMM" "yyyy")
         return date
 
-    #def updateDate(self):
-        #date = QDateTime.currentDataTime().toString("dddd " + "dd" + "." + "MMM" "yyyy")
-        #print("Datum: " + date)
-        #self.data_label.setText(date)
-        #return date
+    def updateDate(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.getDate)
+        self.timer.start(1000)
         
     #Wetter    
     def getWeather(self):
@@ -139,14 +153,6 @@ class MainWindow(QWidget):
         temp_c_float = r['main']['temp']
         temp_c = str(temp_c_float)
         print(temp_c)
-        return temp_c
-        
-    def updateWeather(self):
-        r = requests.get(api_url+'id='+id+'&'+'appid='+app_id).json()
-        temp_c_float = r['main']['temp']
-        temp_c = str(temp_c_float)
-        print(temp_c)
-        self.weather_label.setText(temp_c)
         return temp_c
     
     def getWeatherIcon(self):
@@ -157,7 +163,11 @@ class MainWindow(QWidget):
         image = urllib.request.urlopen(icon_url+number+'.png').read()
         return image
         
-    #def updateWeatherIcon
+    def updateWeather(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.getWeather)
+        self.timer.timeout.connect(self.getWeatherIcon)
+        self.timer.start(600000)
     
     def getQuote(self):
         r = requests.get(quote_url).json()
@@ -170,6 +180,12 @@ class MainWindow(QWidget):
         quote_author = r[0]['title']
         return quote_author
     
+    def updateQuote(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.getQuote)
+        self.timer.timeout.connect(self.getQuoteAuthor)
+        self.timer.start(600000)
+    
     def keyPressEvent(self, QKeyEvent):
         if QKeyEvent.key() == Qt.Key_Esc:
             self.close()
@@ -180,13 +196,7 @@ def main():
 
     timer = QTimer()
     timer.timeout.connect(ex.updateTime)
-    #timer.timeout.connect(ex.updatedate)
-    #timer.timeout.connect(ex.updateWeather)
     timer.start(1000)
-
-##    timer_weather = QTimer()
-##    timer.timeout.connect(ex.updateWeather)
-##    timer_weather.start(600000)
 
     sys.exit(app.exec_())
     
