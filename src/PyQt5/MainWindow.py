@@ -5,8 +5,7 @@ import urllib.request
 from PyQt5.QtCore import * #QTime, QTimer, QDateTime
 from PyQt5.QtWidgets import * #QApplication, QLCDNumber, QWidget, QLabel
 from PyQt5.QtGui import *
-from WeatherWindow import __init__
-
+import WeatherWindow as ww
 
 api_url = 'http://openweathermap.org/data/2.5/weather?'
 id = '2761369'
@@ -68,9 +67,10 @@ class MainWindow(QWidget):
         self.quote_label.resize (100, 100)
         
         #Button
-        self.WeatherWindowButton = QPushButton(self)
-        self.WeatherWindowButton.setObjectName("Change Window")
-        self.WeatherWindowButton.clicked.connect(self.changeWindow)
+        WeatherWindowButton = QPushButton("Change Window", self)
+        #WeatherWindowButton.setObjectName("Change Window")
+        #self.WWeatherWindowButton.setText("Weather Window")
+        WeatherWindowButton.clicked.connect(self.changeWindow)
         
 
         #LCD
@@ -98,28 +98,46 @@ class MainWindow(QWidget):
         v.addWidget(self.quote_label)
         #v.addWidget(self.quote_author_label)
         v.addStretch(1)
-        v.addWidget(self.WeatherWindowButton)
+        v.addWidget(WeatherWindowButton)
 
         self.setLayout(v)
 
 
     def changeWindow(self):
-        self.window = QMainWindow()
-        self.ui = WeatherWindow()
-        self.ui.__init__(self.window)
-        self.window.show()
+        #self.window = QMainWindow()
+        self.ui = ww.WeatherWindow()
+        #self.ui.__init__()
+        #self.window.show()
+        self.hide()
+        
+##    def openWindow(self):
+##
+##        self.window = QtWidgets.QMainWindow()
+##
+##        self.ui = Ui_OtherWindow()
+##
+##        self.ui.setupUi(self.window)
+##
+##        MainWindow.hide()
+##
+##        self.window.show() 
 
     #Zeit
     def getTime(self):
         time = QTime.currentTime().toString()
+        print("getTime: " + time)
         return time
 
     def updateTime(self):
-        time = QTime.currentTime().toString()
-        print("Time: " + time)
-        self.time_label.setText(time)
-        #self.lcd_anzeige.display(time)
-        return time
+##        time = QTime.currentTime().toString()
+##        print("Time: " + time)
+##        self.time_label.setText(time)
+##        #self.lcd_anzeige.display(time)
+##        return time
+        timer = QTimer(self)
+        timer.timeout.connect(self.getTime)
+        timer.start(1000)
+        print("updateTime: " + time)
 
 
 ##    #Zeit für LCD Anzeige
@@ -192,11 +210,11 @@ class MainWindow(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    ex = MainWindow()
+    GUI = MainWindow()
 
-    timer = QTimer()
-    timer.timeout.connect(ex.updateTime)
-    timer.start(1000)
+##    timer = QTimer()
+##    timer.timeout.connect(GUI.updateTime)
+##    timer.start(1000)
 
     sys.exit(app.exec_())
     

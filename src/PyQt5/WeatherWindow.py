@@ -6,6 +6,7 @@ import datetime
 from PyQt5.QtCore import * #QTime, QTimer, QDateTime
 from PyQt5.QtWidgets import * #QApplication, QLCDNumber, QWidget, QLabel
 from PyQt5.QtGui import *
+import MainWindow as mw
 
 api_url = 'http://openweathermap.org/data/2.5/weather?'
 id = '2761369'
@@ -19,14 +20,12 @@ class WeatherWindow(QWidget):
         
         #Window
         self.setWindowTitle("Wetter")
-        self.show()
-
+        self.showFullScreen()
         p = self.palette()
         p.setColor(self.backgroundRole(), Qt.black)
         self.setPalette(p)
 
         weather = self.getWeather()
-        
         image = self.getWeatherIcon()
         
         #Image
@@ -40,6 +39,7 @@ class WeatherWindow(QWidget):
         temp_min = self.getTempMin()
         temp_max = self.getTempMax()
         description = self.getDescription()
+
 
         # Label
         self.weather_label = QLabel(weather+"°C", self)
@@ -57,7 +57,6 @@ class WeatherWindow(QWidget):
         #Eigenschaften
         self.weather_label.setFont(QFont("Vendera", 45, QFont.Bold))
         self.weather_label.setStyleSheet('color: white')
-        
         self.country_label.setStyleSheet('color: white')
         self.city_label.setStyleSheet('color: white')
         self.sunrise_label.setStyleSheet('color: white')
@@ -65,12 +64,14 @@ class WeatherWindow(QWidget):
         self.temp_min_label.setStyleSheet('color: white')
         self.temp_max_label.setStyleSheet('color: white')
         self.description_label.setStyleSheet('color: white')
+        
+        #Button
+        MainWindowButton = QPushButton("MainWindow", self)
+        MainWindowButton.clicked.connect(self.changeWindow)
 
         # Struktur
         h = QHBoxLayout()
-
         v = QVBoxLayout()
-        
         h.addWidget(self.country_label)
         h.addWidget(self.city_label)
         h.addStretch(1)
@@ -82,15 +83,15 @@ class WeatherWindow(QWidget):
         v.addWidget(self.sunset_label)
         v.addWidget(self.temp_max_label)
         h.addWidget(self.temp_min_label)
-        
-
         #v.addStretch(1)
-
         v.addLayout(h)
         v.addStretch(1)
-        
-
+        v.addWidget(MainWindowButton)
         self.setLayout(v)
+        
+    def changeWindow(self):
+        self.ui = mw.MainWindow()
+        self.hide()
 
         
     #Wetter    
@@ -154,18 +155,18 @@ class WeatherWindow(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    ex = WeatherWindow()
+    GUI = WeatherWindow()
 
     timer = QTimer()
-    timer.timeout.connect(ex.getWeatherIcon)
-    timer.timeout.connect(ex.getWeather)
-    timer.timeout.connect(ex.getCountry)
-    timer.timeout.connect(ex.getCity)
-    timer.timeout.connect(ex.getSunrise)
-    timer.timeout.connect(ex.getSunset)
-    timer.timeout.connect(ex.getTempMin)
-    timer.timeout.connect(ex.getTempMax)
-    timer.timeout.connect(ex.getDescription)
+    timer.timeout.connect(GUI.getWeatherIcon)
+    timer.timeout.connect(GUI.getWeather)
+    timer.timeout.connect(GUI.getCountry)
+    timer.timeout.connect(GUI.getCity)
+    timer.timeout.connect(GUI.getSunrise)
+    timer.timeout.connect(GUI.getSunset)
+    timer.timeout.connect(GUI.getTempMin)
+    timer.timeout.connect(GUI.getTempMax)
+    timer.timeout.connect(GUI.getDescription)
     timer.start(600000)
 
     sys.exit(app.exec_())
