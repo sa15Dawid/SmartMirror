@@ -11,6 +11,7 @@ from PyQt5.QtGui import *
 from PyQt5 import QtCore, QtGui
 
 api_url = 'http://api.openweathermap.org/data/2.5/weather?id=2761369&appid=8b0928c7fca2d41f21d5c5db7eb970c9&units=metric'
+forecast_url = 'http://api.openweathermap.org/data/2.5/forecast?id=2761369&appid=8b0928c7fca2d41f21d5c5db7eb970c9&units=metric'
 #id = '2761369'
 #app_id = '8b0928c7fca2d41f21d5c5db7eb970c9'
 icon_url = 'http://openweathermap.org/img/w/'
@@ -67,6 +68,8 @@ class StartWindowWidget(QWidget):
         self.weather_icon = QLabel()
         self.quote_label = QLabel()
         self.quote_author_label = QLabel()
+        
+        
 
         self.time_label.setFont(QFont("Vendera", 25, QFont.Bold))
         self.time_label.setStyleSheet('color:white')
@@ -157,8 +160,11 @@ class WeatherWindowWidget(QWidget):
         self.temp_min_label = QLabel()
         self.temp_max_label = QLabel()
         self.description_label = QLabel()
-
         
+        self.forecast_list = QListWidget()
+
+        self.setStyleSheet("""QListWidget{background: black;}""")
+
         # Eigenschaften
         self.weather_label.setFont(QFont("Vendera", 45, QFont.Bold))
         self.weather_label.setStyleSheet('color: white')
@@ -235,6 +241,19 @@ class WeatherWindowWidget(QWidget):
 
         description = r['weather'][0]['description']
         self.description_label.setText(description)
+        
+        r = requests.get(forecast_url).json()
+
+        count = r['cnt']
+
+        for i in range(0,count,8):
+
+            date = r['list'][i]['dt_txt']
+            description = r['list'][i]['weather'][0]['description']
+            temp_max = r['list'][i]['main']['temp_max']
+            temp_min = r['list'][i]['main']['temp_min']
+
+            self.forecast_list.addItem('On %s "%s" Temp will be between %s an %s °C' % (date[:-8],description,temp_max,temp_min))
 
         threading.Timer(60000.0, self.update3).start()
 
