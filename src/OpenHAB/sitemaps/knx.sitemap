@@ -1,0 +1,10 @@
+sitemap knx label="My home automation" {
+	Frame label="Koffer"
+		{			
+			Switch item=Lampe1 label="Lampe 1" icon="light"
+			Switch item=LampeA label="Lampe A" icon="light"
+                        Switch item=Main label="Main" icon="light"
+                        Switch item=Weather label="Wetter" icon="light"
+                        Switch item=OH label="OH" icon="light"
+		}
+}

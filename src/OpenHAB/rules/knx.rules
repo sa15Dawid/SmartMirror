@@ -1,0 +1,28 @@
+rule "Main Window"
+	when 
+		Item Main changed from OFF to ON
+	then 
+		executeCommandLine("/etc/openhab2/scripts/Main.sh")
+		Thread::sleep(2000)
+		sendCommand(Main, OFF)
+	end
+
+rule "Weather Window"
+        when
+                Item Weather changed from OFF to ON
+        then
+                executeCommandLine("/etc/openhab2/scripts/Weather.sh")
+		Thread::sleep(2000)
+                sendCommand(Weather, OFF)
+        end
+
+rule "OpenHab Window"
+        when
+                Item OH changed from OFF to ON
+        then
+                executeCommandLine("/etc/openhab2/scripts/OH.sh")
+		Thread::sleep(2000)
+                sendCommand(OH, OFF)
+        end
+
+

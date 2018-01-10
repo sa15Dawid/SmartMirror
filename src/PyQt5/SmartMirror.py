@@ -3,6 +3,7 @@ import requests
 import urllib.request
 import datetime
 import threading
+import time
 
 from PyQt5.QtCore import *  # QTime, QTimer, QDateTime
 from PyQt5.QtWidgets import *  # QApplication, QLCDNumber, QWidget, QLabel
@@ -16,6 +17,7 @@ forecast_url = 'http://api.openweathermap.org/data/2.5/forecast?id=2761369&appid
 # app_id = '8b0928c7fca2d41f21d5c5db7eb970c9'
 icon_url = 'http://openweathermap.org/img/w/'
 quote_url = 'https://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1&callback='
+window_url = 'http://localhost:5000/window'
 
 font_L = QFont('Helvetica', 35, QFont.Bold)
 font_M = QFont('Helvetica', 25)
@@ -24,13 +26,30 @@ font_XS = QFont('Helvetica', 15)
 
 
 class MainWindow(QMainWindow):
+    ch_main = pyqtSignal()
+    ch_weather = pyqtSignal()
+    ch_oh = pyqtSignal()
+    
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.central_widget = QStackedWidget()
         self.setCentralWidget(self.central_widget)
         start_widget = StartWindowWidget(self)
-        start_widget.WeatherWindowButton.clicked.connect(self.wetter)
+
+        self.ch_main.connect(lambda: self.main())
+        self.ch_weather.connect(lambda: self.wetter())
+        self.ch_oh.connect(lambda: self.oh())
+        self.lastwindow = "Main"
+        
+        self.update_window()
+        self.loop()
+
         self.central_widget.addWidget(start_widget)
+
+
+        #start_widget.WeatherWindowButton.clicked.connect(self.wetter)
+        #start_widget.WeatherWindowButton.clicked.connect(self.oh)
+
         start_widget.update1()
         start_widget.update2()
 
@@ -39,31 +58,84 @@ class MainWindow(QMainWindow):
         p.setColor(QPalette.Foreground, Qt.white)
         self.setPalette(p)
 
+    def choose_window(self):
+
+        window_json = requests.get(window_url).json()
+        if len(window_json['windows']) > 0:
+            window1 = window_json['windows'][0]['name']
+            #print("Got window:" + window1)
+            #self.lastwindow = ''
+            #print(self.lastwindow)
+            
+            #if window is not None:
+            #    if window != window1:
+            #        window = window1
+            #        print('window'+window)
+            #        print('window1'+window1)
+            #        print("window changed")
+                #self.sig.change.emit()
+            #    print("new window:" + window)
+            return window1
+
+    def loop(self):
+        #print("loop")
+        #self.sig = ChangeWindow()
+        window = self.choose_window()
+            
+        if window != self.lastwindow: 
+            if window == 'Weather':
+                #self.sig.change.connect(self.wetter)
+                self.ch_weather.emit()
+                self.lastwindow = 'Weather'
+                print("changing to Wetter")
+                return self.lastwindow
+            elif window == 'OH':
+                self.ch_oh.emit()
+                self.lastwindow = 'OH'
+                print("changing to OH")
+                return self.lastwindow
+            elif window == 'Main':
+                #self.sig.change.connect(self.main)
+                self.ch_main.emit()
+                self.lastwindow = 'Main' 
+                print('changing to Main')
+                return self.lastwindow
+        threading.Timer(3000.0, self.loop).start()
+
+    def update_window(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.choose_window)
+        self.timer.timeout.connect(self.loop)
+        self.timer.start(1000)
+
+    @QtCore.pyqtSlot()
     def wetter(self):
+        print("wetter")
         weather_widget = WeatherWindowWidget(self)
         self.central_widget.addWidget(weather_widget)
         self.central_widget.setCurrentWidget(weather_widget)
-        weather_widget.MainWindowButton.clicked.connect(self.main)
-        weather_widget.OHWindowButton.clicked.connect(self.oh)
+        #weather_widget.MainWindowButton.clicked.connect(self.main)
+        #weather_widget.OHWindowButton.clicked.connect(self.oh)
         weather_widget.update3()
-
+    @QtCore.pyqtSlot()
     def main(self):
+        print("main")
         start_widget = StartWindowWidget(self)
         self.central_widget.addWidget(start_widget)
         self.central_widget.setCurrentWidget(start_widget)
-        start_widget.WeatherWindowButton.clicked.connect(self.wetter)
-        start_widget.OHWindowButton.clicked.connect(self.oh)
+        #start_widget.WeatherWindowButton.clicked.connect(self.wetter)
+        #start_widget.OHWindowButton.clicked.connect(self.oh)
         start_widget.update1()
         start_widget.update2()
-
+    @QtCore.pyqtSlot()
     def oh(self):
         oh_widget = OpenHabWidget(self)
         self.central_widget.addWidget(oh_widget)
         self.central_widget.setCurrentWidget(oh_widget)
-        oh_widget.weatherButton.clicked.connect(self.wetter)
-        oh_widget.mainButton.clicked.connect(self.main)
+        #oh_widget.weatherButton.clicked.connect(self.wetter)
+        #oh_widget.mainButton.clicked.connect(self.main)
         # oh_widget.updatelist()
-        oh_widget.filllist()
+        #oh_widget.filllist()
 
     def keyPressEvent(self, QKeyEvent):
         if QKeyEvent.key() == Qt.Key_Esc:
@@ -73,7 +145,7 @@ class MainWindow(QMainWindow):
 class StartWindowWidget(QWidget):
     def __init__(self, parent=None):
         super(StartWindowWidget, self).__init__(parent)
-
+        print("StartwindowWidget")
         p = self.palette()
         p.setColor(self.backgroundRole(), Qt.black)
         p.setColor(QPalette.Foreground, Qt.white)
@@ -98,7 +170,6 @@ class StartWindowWidget(QWidget):
         self.quote_label.setWordWrap(True)
         self.quote_label.setAlignment(Qt.AlignCenter)
 
-
         # self.time_label.setStyleSheet('color: white')
         # self.date_label.setStyleSheet('color: white')
         # self.weather_label.setStyleSheet('color: white')
@@ -106,8 +177,8 @@ class StartWindowWidget(QWidget):
         # self.quote_author_label.setStyleSheet('color: white')
 
         # Button
-        self.WeatherWindowButton = QPushButton('Weather Window')
-        self.OHWindowButton = QPushButton('OpenHab Window')
+        #self.WeatherWindowButton = QPushButton('Weather Window')
+        #self.OHWindowButton = QPushButton('OpenHab Window')
         # Struktur
         h = QHBoxLayout()
         h1 = QHBoxLayout()
@@ -131,8 +202,8 @@ class StartWindowWidget(QWidget):
         h2.addWidget(self.quote_author_label)
         h2.addStretch(1)
         v.addLayout(h2)
-        v.addWidget(self.WeatherWindowButton)
-        v.addWidget(self.OHWindowButton)
+        #v.addWidget(self.WeatherWindowButton)
+        #v.addWidget(self.OHWindowButton)
 
         self.setLayout(v)
 
@@ -171,15 +242,48 @@ class StartWindowWidget(QWidget):
         self.quote_label.setText(quote)
 
         quote_author = rq[0]['title']
-        self.quote_author_label.setText("~"+quote_author)
+        self.quote_author_label.setText("~" + quote_author)
 
         threading.Timer(60000.0, self.update2).start()
+
+    # def choose_window(self):
+    #     self.sig = ChangeWindow()
+    #     window = ''
+    #     window_json = requests.get(window_url).json()
+    #     window1 = window_json['windows'][0]['name']
+    #     print("API Window:" + window1)
+    #     if window is not None:
+    #         if window != window1:
+    #             window = window1
+    #             print("window changed")
+    #             self.sig.change.emit()
+    #             print("new window:" + window)
+    #         return window
+    # 
+    # def loop(self):
+    #     self.main = MainWindow()
+    #     print("loop")
+    #     self.sig = ChangeWindow()
+    #     window = self.choose_window()
+    # 
+    #     if window == 'Weather':
+    #         self.sig.change.connect(main.wetter)
+    #         print("check Wetter")
+    #     elif window == 'OH':
+    #         self.sig.change.connect(main.oh)
+    #         print("check OH")
+    # 
+    # def update_window(self):
+    #     self.timer = QTimer(self)
+    #     self.timer.timeout.connect(self.choose_window)
+    #     self.timer.timeout.connect(self.loop)
+    #     self.timer.start(3000)
 
 
 class WeatherWindowWidget(QWidget):
     def __init__(self, parent=None):
         super(WeatherWindowWidget, self).__init__(parent)
-
+        print("WeatherWindowWidget")
 
         # Label
         self.weather_label = QLabel()
@@ -219,8 +323,8 @@ class WeatherWindowWidget(QWidget):
         self.setStyleSheet("""QListWidget{background: black;}""")
 
         # Button
-        self.MainWindowButton = QPushButton('MainWindow')
-        self.OHWindowButton = QPushButton('OpenHab Window')
+        #self.MainWindowButton = QPushButton('MainWindow')
+        #self.OHWindowButton = QPushButton('OpenHab Window')
 
         # Struktur
         h = QHBoxLayout()
@@ -252,8 +356,8 @@ class WeatherWindowWidget(QWidget):
         v.addLayout(h3)
         v.addStretch(1)
         v.addWidget(self.forecast_list)
-        v.addWidget(self.MainWindowButton)
-        v.addWidget(self.OHWindowButton)
+        #v.addWidget(self.MainWindowButton)
+        #v.addWidget(self.OHWindowButton)
         self.setLayout(v)
 
     def update3(self):
@@ -274,7 +378,7 @@ class WeatherWindowWidget(QWidget):
         self.weather_icon.setPixmap(QPixmap(icon))
 
         country = r['sys']['country']
-        self.country_label.setText(country+",")
+        self.country_label.setText(country + ",")
 
         city = str(r['name'])
         self.city_label.setText(city)
@@ -313,6 +417,8 @@ class WeatherWindowWidget(QWidget):
 
 
 class OpenHabWidget(QWidget):
+    update_list = pyqtSignal()
+    
     def __init__(self, parent=None):
         super(OpenHabWidget, self).__init__(parent)
 
@@ -323,6 +429,9 @@ class OpenHabWidget(QWidget):
 
         self.state = ''
         self.name = ''
+        
+        self.current_entries = []
+        self.update_list.connect(self.updatelist)
 
         p = self.palette()
         p.setColor(self.backgroundRole(), Qt.black)
@@ -337,70 +446,51 @@ class OpenHabWidget(QWidget):
         self.setStyleSheet("""QListWidget{background: black;}""")
 
         # Button
-        self.mainButton = QPushButton('Main Window')
-        self.weatherButton = QPushButton('Weather Window')
+        #self.mainButton = QPushButton('Main Window')
+        #self.weatherButton = QPushButton('Weather Window')
 
         # Struktur
         v = QVBoxLayout()
         v.addWidget(self.items_list)
-        v.addWidget(self.mainButton)
-        v.addWidget(self.weatherButton)
+        #v.addWidget(self.mainButton)
+        #v.addWidget(self.weatherButton)
 
         self.setLayout(v)
-
-    # def list(self):
-    #
-    #     r = requests.get('http://172.22.0.120:8080/rest/items').json()
-    #
-    #     count = len(r)
-    #
-    #     for i in range(0, count):
-    #
-    #         # print(len(r))
-    #         self.items_list.addItem('%s %s' % (self.name, self.state))
-
-    def filllist(self):
-
-        r = requests.get('http://172.22.0.120:8080/rest/items').json()
-        # r = self.updatelist()
-        count = len(r)
-
-        for i in range(0, count):
-
-            state2 = r[i]['state']
-            name2 = r[i]['name']
-
-            # print(state2)
-
-            if self.state != state2:
-                self.state = state2
-
-            if self.name != name2:
-                self.name = name2
-
-            self.items_list.addItem('%s %s' % (self.name, self.state))
-
-
-            # self.items_list.repaint()
-            # threading.Timer(1.0, self.filllist).start()
-
+        self.retrieve_changes()
+    
+    def retrieve_changes(self):
+        r = requests.get('http://localhost:8080/rest/items').json()
+        r = list(filter(lambda item: item['name'] not in ["Main", "Weather", "OH"], r))
+        self.current_entries = r
+        self.update_list.emit()
+        threading.Timer(1.0, self.retrieve_changes).start()
+        
+    pyqtSlot()
     def updatelist(self):
 
-        r = requests.get('http://172.22.0.120:8080/rest/items').json()
+        r = self.current_entries
         count = len(r)
 
         for i in range(0, count):
-            state2 = r[i]['state']
+            entryName = r[i]['name']
+            entryState = r[i]['state']
+            entryFormatted = entryName + ": " + entryState
+            existingEntries = self.items_list.findItems(entryName, Qt.MatchContains)
+            if len(existingEntries) == 0:
+                print("Did not find " + r[i]['name'] +", adding")
+                self.items_list.addItem(entryFormatted)
+            else:
+                existingEntries[0].setText(entryFormatted)
 
-        threading.Timer(1.0, self.updatelist).start()
+        
 
 
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()
 
-    # self.showFullScreen()
-    window.show()
+    window.showFullScreen()
+    #window.show()
     sys.exit(app.exec_())
 
 

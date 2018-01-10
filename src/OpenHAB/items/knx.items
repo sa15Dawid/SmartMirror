@@ -1,0 +1,10 @@
+Switch Lampe1 "Switch" ["Lighting"] {knx ="1/0/0"}
+
+Switch LampeA "Switch" ["Lighting"] {knx="1/0/1"}
+
+Switch Main "Switch" ["Lighting"]
+
+Switch Weather "Switch" ["Lighting"]
+
+Switch OH "Switch" ["Lighting"]
+
