@@ -1,6 +1,6 @@
 rule "Main Window"
 	when 
-		Item Main changed from OFF to ON
+		Item Main changed to ON
 	then 
 		executeCommandLine("/etc/openhab2/scripts/Main.sh")
 		Thread::sleep(2000)
@@ -9,7 +9,7 @@ rule "Main Window"
 
 rule "Weather Window"
         when
-                Item Weather changed from OFF to ON
+                Item Weather changed to ON
         then
                 executeCommandLine("/etc/openhab2/scripts/Weather.sh")
 		Thread::sleep(2000)
@@ -18,7 +18,7 @@ rule "Weather Window"
 
 rule "OpenHab Window"
         when
-                Item OH changed from OFF to ON
+                Item OH changed to ON
         then
                 executeCommandLine("/etc/openhab2/scripts/OH.sh")
 		Thread::sleep(2000)
