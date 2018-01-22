@@ -100,11 +100,11 @@ class MainWindow(QMainWindow):
                 self.lastwindow = 'Main' 
                 print('changing to Main')
                 return self.lastwindow
-        threading.Timer(3000.0, self.loop).start()
+        #threading.Timer(3000.0, self.loop).start()
 
     def update_window(self):
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.choose_window)
+        #self.timer.timeout.connect(self.choose_window)
         self.timer.timeout.connect(self.loop)
         self.timer.start(1000)
 
